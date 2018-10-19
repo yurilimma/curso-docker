@@ -1,0 +1,6 @@
+version: '2'
+services:
+  app:
+    #sobrescrevendo valor da variavel de ambiente no docker-compose original
+    environment:
+      - DB_NAME=email_sender

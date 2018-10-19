@@ -1,0 +1,104 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Cadastro Simples</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    </head>
+    <body>
+        <div class="container">
+            <h1>Cadastro Simples</h1>
+            <hr>
+            <div>
+                <input name='id' type='hidden' />
+                <div class="form-group">
+                    <label for="Name"></label>
+                    <input class='form-control' name='name' placeholder='Digite o nome' />
+                </div>
+                <button class='btn btn-success' save>Salvar</button>
+            </div>
+
+            <table class="table" id='clients'>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="clientsRows"></tbody>
+            </table>
+        </div>
+
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+
+        <script>
+            //path api
+            const API = 'http://localhost:3000'
+            //retorna o html de um botão, dinâmico definido por parâmetro
+            const createButton = (label, type) => {
+                return $('<button>').addClass(`btn btn-${type}`).html(label)
+            }
+            const renderRows = clients => {
+                //linhas da table
+                const rows = clients.map(client => {
+                    const updateButton = createButton('Atualizar', 'warning')
+                    //.click = ao clicar no botão chama definida =>
+                    updateButton.click(() => loadClient(client))
+                    const removeButton = createButton('Excluir', 'danger')
+                    removeButton.click(() => removeClient(client))
+                    //definindo as linhas da table 1 referente ao nome e outra as ações, excluir e alterar
+                    return $('<tr>')
+                        .append($('<td>').append(client.name))
+                        .append($('<td>').append(updateButton).append(removeButton))
+                })
+                $('#clientsRows').html(rows)
+            }
+            /**
+             * o loadClient, carrega as informações do cliente nos campos do input
+             * quem altera e persiste as informações é o botão save.
+             * **/
+            const loadClient = client => {
+                $('[name=id]').val(client._id)
+                $('[name=name]').val(client.name)
+            }
+            const removeClient = client => {
+                //chamada ajax
+                $.ajax({
+                    method: 'DELETE',
+                    url: `${API}/clients/${client._id}`,
+                    success: getClients
+                })
+            }
+            const getClients = () => {
+                $.ajax({
+                    url: `${API}/clients`,
+                    //se for com sucesso retornará os clientes
+                    success: clients => {
+                        renderRows(clients)
+                        //limpa o campo name
+                        $('[name]').val('')
+                    }
+                })
+            }
+            const saveClient = () => {
+                //pega o id do input do formulário
+                const _id = $('[name=id]').val()
+                //pega o nome do input do formulário
+                const name = $('[name=name]').val()
+                $.ajax({
+                    //se o id não estiver em branco(alteracao), chama o put
+                    //se não(criação), chama o post
+                    method: _id ? 'PUT' : 'POST',
+                    url: `${API}/clients/${_id}`,
+                    data: _id ? { _id, name } : { name },
+                    success: getClients
+                })
+            }
+            //construtor
+            $(() => {
+                getClients()
+                //associa o click do botão definido como save a função js saveClient
+                $('[save]').click(saveClient)
+            })
+        </script>
+    </body>
+</html>
